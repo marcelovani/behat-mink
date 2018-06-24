@@ -3,6 +3,7 @@
 namespace DennisDigital\Behat\Mink\Context;
 
 use Behat\MinkExtension\Context\RawMinkContext;
+use Adbar\Dot as Dot;
 
 /**
  * Class HtmlContext
@@ -498,6 +499,83 @@ class HtmlContext extends RawMinkContext {
     else {
       throw new \Exception(sprintf('Could not find rel %s link element', $arg));
     }
+  }
+
+  /**
+   * @Given /^a json-?ld "([^"]*)" value should match "(?P<regex>(?:[^"]|\\")*)"$/
+   * @Given /^the json ld value "([^"]*)" should match "([^"]*)"$/
+   */
+  public function assertJsonldMatch($jsonKey, $regex) {
+    $page = $this->getSession()->getPage();
+    $results = $page->findAll('css', "script[type='application/ld+json']");
+    if (count($results)) {
+      foreach ($results as $element) {
+        $text = $element->getText();
+        $json = new Dot(json_decode($text, TRUE));
+        $value = $json->get($jsonKey);
+        if (preg_match($regex, $value)) {
+          return;
+        }
+      }
+    }
+    throw new \Exception(sprintf('The regex "%s" was not found in a JSON-LD element "%s".', $regex, $jsonKey));
+  }
+
+
+  /**
+   * @Given /^a json value "([^"]*)" should match "([^"]*)"$/
+   *
+   * @param $jsonKey
+   * @param $regex
+   * @throws \Exception
+   */
+  public function aJsonValueShouldMatch($jsonKey, $regex) {
+    $page = $this->getSession()->getPage();
+    if ($results = $page->findAll('css', "script[type='application/json']")) {
+      foreach ($results as $item) {
+        $json_element_text = trim($item->getText());
+
+        // Get value and check regex.
+        $json = new Dot(json_decode($json_element_text, TRUE));
+        $value = $json->get($jsonKey);
+
+        if (preg_match($regex, $value)) {
+          return;
+        }
+      }
+    }
+
+    // Throw exception if a match could not be found.
+    throw new \Exception(sprintf('The regex "%s" was not found in the JSON LD element "%s".', $regex, $jsonKey));
+  }
+
+  /**
+   * @Given /^a json value "([^"]*)" in the "([^"]*)" element should match "([^"]*)"$/
+   *
+   * @param $jsonKey
+   * @param $element
+   * @param $regex
+   *
+   * @throws \Exception
+   */
+  public function aJsonValueInTheElementShouldMatch($jsonKey, $element, $regex) {
+    $page = $this->getSession()->getPage();
+    if ($results = $page->findAll('css', $element)) {
+      foreach ($results as $item) {
+        $json_element_text = trim($item->getAttribute('json'));
+
+        // Get value and check regex.
+        $json = new Dot(json_decode($json_element_text, TRUE));
+        $value = $json->get($jsonKey);
+
+        if (preg_match($regex, $value)) {
+          return;
+        }
+      }
+    }
+
+    // Throw exception if a match could not be found.
+    throw new \Exception(sprintf('The regex "%s" was not found in the %s element "%s".', $regex, $element, $jsonKey));
   }
 
 }
