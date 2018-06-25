@@ -17,6 +17,11 @@ class HtmlContext extends RawMinkContext {
   protected $xhtml_doc;
 
   /**
+   * Store values for use within a scenario.
+   */
+  protected $store = array();
+
+  /**
    * @Then /^I should see a "([^"]*)" element with the "([^"]*)" attribute set with a value of "([^"]*)"$/
    */
   public function iShouldSeeAElementWithTheAttributeSetWithAValueOf($element_type, $attribute_name, $attribute_value) {
@@ -578,4 +583,155 @@ class HtmlContext extends RawMinkContext {
     throw new \Exception(sprintf('The regex "%s" was not found in the %s element "%s".', $regex, $element, $jsonKey));
   }
 
+
+  /**
+   * Store, the result of the regex on the element with specified CSS.
+   *
+   * @Then /^store the result of "(?P<regex>(?:[^"]|\\")*)" for the element "(?P<selector>[^"]*)"$/
+   */
+  public function storeElementMatches($selector, $regex) {
+    if ($matches = $this->getElementMatches($selector, $regex)) {
+      $this->storeSet($matches);
+    }
+  }
+
+  /**
+   * Store, the result of the regex on the element with specified CSS as specified key.
+   *
+   * @Then /^store the result of "(?P<regex>(?:[^"]|\\")*)" for the element "(?P<selector>[^"]*)" as "(?P<key>[^"]*)"$/
+   */
+  public function storeElementMatchesAs($selector, $regex, $key) {
+    if ($matches = $this->getElementMatches($selector, $regex)) {
+      $this->storeSet($key, $matches);
+    }
+  }
+
+  /**
+   * Set store value.
+   *
+   * @param $key
+   * @param $val
+   */
+  protected function storeSet($key, $val = NULL) {
+    if ($val == NULL) {
+      // Use numerical keys
+      $this->store[] = $key;
+    }
+    else {
+      $this->store[$key] = $val;
+    }
+  }
+
+  /**
+   * Get store value.
+   *
+   * @param $key
+   * @return mixed|null
+   */
+  protected function storeGet($key) {
+    if (isset($this->store[$key])) {
+      return $this->store[$key];
+    }
+    return NULL;
+  }
+
+  /**
+   * Get the element matches for selector.
+   *
+   * @param $selector
+   * @param $regex
+   * @return array
+   * @throws \Exception
+   */
+  public function getElementMatches($selector, $regex) {
+    $page = $this->getSession()->getPage();
+    $results = $page->findAll('css', $selector);
+    if (count($results) == 0) {
+      throw new \Exception(sprintf('The element "%s" was not found.', $selector));
+    }
+
+    foreach ($results as $element) {
+      $html = $element->getHtml();
+      if (preg_match($regex, $html, $matches)) {
+        return $matches;
+      }
+    }
+
+    throw new \Exception(sprintf('The regex "%s" was not found in the HTML of any element matching "%s".', $regex, $selector));
+  }
+
+  /**
+   * Checks, that element with specified CSS contains specified regular expression.
+   *
+   * @Then /^an? "(?P<element>[^"]*)" element should match "(?P<regex>(?:[^"]|\\")*)"$/
+   */
+  public function assertElementMatches($selector, $regex) {
+    try {
+      $this->storeElementMatches($selector, $regex);
+    } catch (\Exception $e) {
+      throw $e;
+    }
+  }
+
+
+  /**
+   * @Transform /(.*?{match:.*?)$/
+   *
+   * Replace any stored matches if the argument is a string.
+   */
+  public function replaceMatchTokens($argument) {
+    if (is_string($argument)) {
+      preg_match_all('~{match:(.*?)}~', $argument, $matches);
+      if (isset($matches[0]) && isset($matches[1])) {
+        foreach ($matches[0] as $i => $match) {
+          // Get value using stored key e.g. 0:1 or node:1
+          $matchValue = $this->getStoredMatch($matches[1][$i]);
+          // Replace the token e.g. {match:0:1} with value.
+          $argument = str_ireplace($match, $matchValue, $argument);
+        }
+      }
+    }
+    return $argument;
+  }
+
+  /**
+   * Returns the value for the specifed match.
+   *
+   * @param $result
+   * @return mixed
+   * @throws \Exception
+   */
+  public function getStoredMatch($result) {
+    $parts = explode(':', $result);
+    if (count($parts) == 1) {
+      $store_key = 0;
+      $regex_key = $result;
+    }
+    else {
+      $store_key = $parts[0];
+      $regex_key = $parts[1];
+    }
+    $regex_result = $this->storeGet($store_key);
+    if (isset($regex_result[$regex_key])) {
+      return $regex_result[$regex_key];
+    }
+    throw new \Exception(sprintf('The match "%s" has not been set.', $result));
+  }
+
+  /**
+   * @Then /^the "([^"]*)" element should contain match result "([^"]*)"$/
+   *
+   * A scenario can call assertElementContainsRegex multiple times, each time the result is stored for later use.
+   * The number of the store is incremented by one for each call to assertElementContainsRegex in the scenario.
+   *
+   * This function checks against the regex result in the store.
+   * The result parameter can be a colon seperated string,
+   * the first is the number of the store, the second the regex array value to check.
+   *
+   * Eg: Then the "#search_count" element should contain regex result "0:1"
+   */
+  public function theElementShouldContainMatchResult($element, $result) {
+    $resultValue = $this->getStoredMatch($result);
+    $this->assertSession()->elementContains('css', $element, $resultValue);
+  }
 }
