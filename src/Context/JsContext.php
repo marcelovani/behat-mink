@@ -317,4 +317,235 @@ class JsContext extends RawMinkContext {
       throw new \Exception(sprintf("Atribute '%s' value is '%s' not '%s'", $propertyName, $actual_value, $value));
     }
   }
+
+  /**
+   * Translate a css selector to an xpath one.
+   *
+   * @param string $cssSelector
+   */
+  public function cssSelectorToXpath($cssSelector) {
+    return $this->getSession()
+      ->getSelectorsHandler()
+      ->selectorToXpath('css', $cssSelector);
+  }
+
+
+  /**
+   * @Then /^the "([^"]*)" element should have css property "([^"]*)" of "([^"]*)"$/
+   *
+   * @see http://api.jquery.com/css/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsAssertCssPropertyValue($jQuerySelector, $propertyName, $value) {
+    $actual_value = $this->jsGetCssPropertyValue($jQuerySelector, $propertyName);
+    if ($actual_value != $value) {
+      throw new \Exception(sprintf("CSS property '%s' value is '%s' not '%s'", $propertyName, $actual_value, $value));
+    }
+  }
+
+  /**
+   * @Then /^the "([^"]*)" element should not have css property "([^"]*)" of "([^"]*)"$/
+   *
+   * @see http://api.jquery.com/css/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsAssertNotCssPropertyValue($jQuerySelector, $propertyName, $value) {
+    $actual_value = $this->jsGetCssPropertyValue($jQuerySelector, $propertyName);
+    if ($actual_value == $value) {
+      throw new \Exception(sprintf("CSS property '%s' value should not be '%s'", $propertyName, $actual_value));
+    }
+  }
+
+  /**
+   * @Then /^each "([^"]*)" should have css property "([^"]*)" of "([^"]*)"$/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsAssertEachCssPropertyValue($jQuerySelector, $propertyName, $value) {
+    $this->jsWaitForDocumentLoaded();
+
+    $script = <<<JS
+return (function(){
+  var value = '';
+  jQuery( "$jQuerySelector" ).each(function() {
+    if (jQuery( this ).css( "$propertyName" ) != "$value") {
+      value += "\\n" + jQuery( this ).css( "$propertyName" ) + "\\n";
+    }
+  });
+  return value;
+})();
+JS;
+
+    $v = $this->getSession()->evaluateScript($script);
+    // $value contains the html of the failing element.
+    if (strlen($v) > 0) {
+      throw new \Exception(sprintf("The '%s' was not found with value '%s'", $propertyName, $value));
+    }
+  }
+
+  /**
+   * @Then /^each "([^"]*)" should not have css property "([^"]*)" of "([^"]*)"$/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsAssertNotEachCssPropertyValue($jQuerySelector, $propertyName, $value) {
+    $this->jsWaitForDocumentLoaded();
+
+    $script = <<<JS
+return (function(){
+  var value = '';
+  jQuery( "$jQuerySelector" ).each(function() {
+    if (jQuery( this ).css( "$propertyName" ) == "$value") {
+      value += "\\n" + jQuery( this ).css( "$propertyName" ) + "\\n";
+    }
+  });
+  return value;
+})();
+JS;
+
+    $v = $this->getSession()->evaluateScript($script);
+    // $value contains the html of the failing element.
+    if (strlen($v) > 0) {
+      throw new \Exception(sprintf("The '%s' was found with value '%s'", $propertyName, $value));
+    }
+  }
+
+  /**
+   * @Then /^"([^"]*)" should be revealed$/
+   *
+   * Visible (to people & bots) when once was not visible.
+   *
+   * Refers to the @mixin element-invisible-off
+   * that sets an element's visibility using clipping etc rather than :visible
+   * so that bots can still see the element.
+   *
+   * @see dennis_base_v2/sass-extensions/dennis-base-shared/stylesheets/shared/_common.scss
+   */
+  public function jsTheShouldBeElementRevealed($jQuerySelector) {
+    $overflow = $this->jsGetCssPropertyValue($jQuerySelector, 'overflow');
+    $clip = $this->jsGetCssPropertyValue($jQuerySelector, 'clip');
+    if ($clip == 'rect(1px 1px 1px 1px)' && $overflow == 'hidden') {
+      throw new \Exception(sprintf("The '%s' element should be revealed", $jQuerySelector));
+    }
+  }
+
+  /**
+   * @Then /^"([^"]*)" should be unrevealed$/
+   *
+   * Invisible (to people but not bots) but has potential to be visible.
+   *
+   * Refers to the @mixin element-invisible
+   * that sets an element's visibility using clipping etc rather than :visible
+   * so that bots can still see the element.
+   *
+   * @see dennis_base_v2/sass-extensions/dennis-base-shared/stylesheets/shared/_common.scss
+   */
+  public function jsTheShouldBeElementUnrevealed($jQuerySelector) {
+    $overflow = $this->jsGetCssPropertyValue($jQuerySelector, 'overflow');
+    $clip = $this->jsGetCssPropertyValue($jQuerySelector, 'clip');
+    if ($clip != 'rect(1px 1px 1px 1px)' && $overflow != 'hidden') {
+      throw new \Exception(sprintf("The '%s' element should not be revealed", $jQuerySelector));
+    }
+  }
+
+  /**
+   * @Then /^each "([^"]*)" should have been given the "([^"]*)" class$/
+   *
+   * Check the the class has been added to each element, defined by the selector, by javascript.
+   *
+   * @param string $element
+   * @param string $class
+   */
+  public function jsAssertEachElementClassSet($jQuerySelector, $class) {
+    $this->jsWaitForDocumentLoaded();
+
+    $script = <<<JS
+return (function(){
+  var value = 'no selector match';
+  jQuery( "$jQuerySelector" ).each(function() {
+    if (jQuery( this ).hasClass( "$class" )) {
+      value = '';
+    }
+  });
+  return value;
+})();
+JS;
+
+    $value = $this->getSession()->evaluateScript($script);
+    if (strlen($value) > 0) {
+      if ($value == 'no selector match') {
+        throw new \Exception(sprintf("The selector '%s' was not found", $jQuerySelector));
+      }
+      else {
+        throw new \Exception(sprintf("The class '%s' was not found in all elements in selector '%s'", $class, $jQuerySelector));
+      }
+    }
+  }
+
+  /**
+   * @Then /^each "([^"]*)" should not have the "([^"]*)" class$/
+   *
+   * Check the the class has been removed from each element, defined by the selector, by javascript.
+   *
+   * @param string $element
+   * @param string $class
+   */
+  public function jsAssertNotEachElementClassSet($jQuerySelector, $class) {
+    $this->jsWaitForDocumentLoaded();
+
+    $script = <<<JS
+return (function(){
+  if (jQuery( "$jQuerySelector" ).length == 0) {
+    return 'no selector match';
+  }
+  var value = '';
+  jQuery( "$jQuerySelector" ).each(function() {
+    if (jQuery( this ).hasClass( "$class" ) == true) {
+      value += "\\n" + jQuery( this ).parent().html() + "\\n";
+      value += " " + jQuery( this ).attr( "class" );
+    }
+  });
+  return value;
+})();
+JS;
+
+    $value = $this->getSession()->evaluateScript($script);
+    // $value contains the html of the failing element.
+    if (strlen($value) > 0) {
+      if ($value == 'no selector match') {
+        throw new \Exception(sprintf("The selector '%s' was not found", $jQuerySelector));
+      }
+      else {
+        throw new \Exception(sprintf("The class '%s' was found in in selector '%s'", $class, $jQuerySelector));
+      }
+    }
+  }
+
+  /**
+   * Use jquery to get the value of a css property.
+   *
+   * @param string $jQuerySelector
+   * @param string $propertyName
+   */
+  public function jsGetCssPropertyValue($jQuerySelector, $propertyName) {
+    $this->jsWaitForDocumentLoaded();
+    $script = 'return jQuery("' . $jQuerySelector . '").css("' . $propertyName . '");';
+    return $this->getSession()->evaluateScript($script);
+  }
+
+
+  /**
+   * Wait jQuery to be ready.
+   *
+   * NB: the document may not be loaded yet so the UI may not be in a state to be tested yet.
+   * Use jsWaitForDocumentLoaded() if all resources are needed.
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsWaitForJquery($timeout = 5000) {
+    $this->getSession()->wait($timeout, "typeof jQuery != 'undefined' && jQuery.isReady");
+  }
+
 }

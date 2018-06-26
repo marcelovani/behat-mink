@@ -774,4 +774,47 @@ class HtmlContext extends RawMinkContext {
     }
 
   }
+
+  /**
+   * Checks the picture mapping settings for a given element on the page.
+   * eg: Then I should see the following picture mapping for the ".teaser-image" element
+   *
+   * @Then I should see the following picture mappings for the :arg1 element
+   */
+  public function iShouldSeeTheFollowingPictureMappingForTheElement($element, TableNode $table) {
+    $page = $this->getSession()->getPage();
+
+    // Check if element exists
+    if (empty($page->findAll('css', $element))) {
+      throw new \Exception(sprintf('There is no "' . $element . '" element on the page'));
+    }
+    // Check if element contains a picture tag
+    if (empty($page->findAll('css', $element . ' picture'))) {
+      throw new \Exception(sprintf('The "' . $element . '" element does not contain a picture tag'));
+    }
+
+    $row_count = 0;
+
+    foreach ($table as $row) {
+      // Check if the picture tag contains the relevant order source tag
+      if (empty($page->findAll('css', $element . ' picture > source:nth-child(' . $row['order'] . ')'))) {
+        throw new \Exception(sprintf('The picture tag in the "' . $element . '" element is missing source tag number ' . $row['order']));
+      }
+      // Check if the source tag matches the correct media query
+      if (empty($page->findAll('css', $element . ' picture > source:nth-child(' . $row['order'] . ')[media="' . $row['media_query'] . '"]'))) {
+        throw new \Exception(sprintf('Source tag number ' . $row['order'] . ' in the "' . $element . ' picture" element does not match the "' . $row['media_query'] . '" media query'));
+      }
+      // Check if the correct image style is used for the relevant media query
+      if (empty($page->findAll('css', $element . ' picture > source:nth-child(' . $row['order'] . ')[srcset*="styles/' . $row['image_style'] . '"][media="' . $row['media_query'] . '"]'))) {
+        throw new \Exception(sprintf('The "' . $row['media_query'] . '" media query in source tag number ' . $row['order'] . ' of the "' . $element . ' picture" element is not using the "' . $row['image_style'] . '" image style'));
+      }
+      $row_count += 1;
+    }
+    // Check if the picture tag contains the relevant order source tag
+    $next_row = $row_count;
+    $next_row += 1;
+    if (!empty($page->findAll('css', $element . ' picture > source:nth-child(' . $next_row . ')'))) {
+      throw new \Exception(sprintf('The picture tag in the "' . $element . '" element contains a source tag number ' . $next_row . ', but this is not referenced in the test scenario. Please add this source tag to the test if it is meant to be there'));
+    }
+  }
 }
