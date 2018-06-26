@@ -23,7 +23,7 @@ class JsContext extends RawMinkContext {
    *
    * Every scenario gets its own context object.
    *
-   * @param array $parameters.
+   * @param array $parameters .
    *   Context parameters (set them up through behat.yml or behat.local.yml).
    */
   public function __construct($parameters = array()) {
@@ -275,5 +275,46 @@ class JsContext extends RawMinkContext {
    */
   public function jsSetScreenSize($width, $height) {
     $this->getSession()->resizeWindow($width, $height, 'current');
+  }
+
+
+  /**
+   * Use jquery to get the value of an element's attribute.
+   *
+   * @param string $jQuerySelector
+   * @param string $propertyName
+   */
+  public function jsGetAttributeValue($jQuerySelector, $propertyName) {
+    $this->jsWaitForJquery();
+    $script = 'return jQuery("' . $jQuerySelector . '").attr("' . $propertyName . '");';
+    return $this->getSession()->evaluateScript($script);
+  }
+
+  /**
+   * @Then /^the "([^"]*)" element should have an attribute "([^"]*)" contain "([^"]*)"$/
+   *
+   * @see http://api.jquery.com/attr/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsAssertAttributeValueContains($jQuerySelector, $propertyName, $value) {
+    $actual_value = $this->jsGetAttributeValue($jQuerySelector, $propertyName);
+    if (strpos($actual_value, $value) === FALSE) {
+      throw new \Exception(sprintf("Atribute '%s' value '%s' does not contain not '%s'", $propertyName, $actual_value, $value));
+    }
+  }
+
+  /**
+   * @Then /^the "([^"]*)" element should have an attribute "([^"]*)" of "([^"]*)"$/
+   *
+   * @see http://api.jquery.com/attr/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsAssertAttributeValue($jQuerySelector, $propertyName, $value) {
+    $actual_value = $this->jsGetAttributeValue($jQuerySelector, $propertyName);
+    if ($actual_value != $value) {
+      throw new \Exception(sprintf("Atribute '%s' value is '%s' not '%s'", $propertyName, $actual_value, $value));
+    }
   }
 }
