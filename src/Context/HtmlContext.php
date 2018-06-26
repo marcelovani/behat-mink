@@ -734,4 +734,44 @@ class HtmlContext extends RawMinkContext {
     $resultValue = $this->getStoredMatch($result);
     $this->assertSession()->elementContains('css', $element, $resultValue);
   }
+
+
+  /**
+   * Follows the stylesheet.
+   * @When /^I follow the "([^"]*)" stylesheet$/
+   */
+  public function iFollowTheStylesheet($stylesheet_name) {
+    $page = $this->getSession()->getPage();
+    $stylesheet_url = FALSE;
+    $css_elements = $page->findAll('css', 'style');
+
+    foreach ($css_elements as $element) {
+      preg_match_all('|url\("([^(]*?' . $stylesheet_name . '[^(]*?)"\)|', $element->getHtml(), $matches);
+      if (!empty($matches[1])) {
+        foreach ($matches[1] as $match) {
+          $stylesheet_url = $match;
+        }
+      }
+    }
+
+    if (!$stylesheet_url) {
+      $css_elements = $page->findAll('css', 'head');
+      foreach ($css_elements as $element) {
+        preg_match_all('|rel="stylesheet" href="([^>]*?' . $stylesheet_name . '[^>]*?)"|', $element->getHtml(), $matches);
+        if (!empty($matches[1])) {
+          foreach ($matches[1] as $match) {
+            $stylesheet_url = $match;
+          }
+        }
+      }
+    }
+
+    if ($stylesheet_url) {
+      $this->getSession()->visit($stylesheet_url);
+    }
+    else {
+      throw new \Exception(sprintf('The stylesheet "%s" was not found.', $stylesheet_name));
+    }
+
+  }
 }
