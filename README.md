@@ -5,7 +5,7 @@ Provides reusable Behat steps for any website
 ```
 DennisDigital\Behat\Mink\Context\HtmlContext
 ```
-
+### Step Definitions
 ```gherkin
 Then /^I should see a "([^"]*)" element with the "([^"]*)" attribute set with a value of "([^"]*)"$/
 Then /^I should not see a "([^"]*)" element with the "([^"]*)" attribute set with a value of "([^"]*)"$/
@@ -48,11 +48,12 @@ Then I should see the following picture mappings for the :arg1 element
 ```
 
 ## JavaScript
-
 ```
-DennisDigital\Behat\Mink\Context\JsContext
+DennisDigital\Behat\Mink\Context\JsContext:
+  parameters:
+    element_wait_timeout: {optional, default:5}
 ```
-
+### Step Definitions
 ```gherkin
 Then /^I click the "([^"]*)" element$/
 Then I wait a maximum of :arg1 seconds for the :arg2 element
@@ -84,7 +85,7 @@ Then /^each "([^"]*)" should not have the "([^"]*)" class$/
 ```
 DennisDigital\Behat\Mink\Context\JsonContext
 ```
-
+### Step Definitions
 ```gherkin
 Then /^the response should match json schema:/
 Then /^the response should match json schema "([^"]*)"/
@@ -97,7 +98,7 @@ Given /^the json xhtml value "([^"]*)" does not match xpath "([^"]*)"$/
 ```
 DennisDigital\Behat\Mink\Context\XmlContext
 ```
-
+### Step Definitions
 ```gherkin
 Given /^the xml is valid$/
 Given /^the xml matches xpath "([^"]*)"$/
@@ -108,7 +109,7 @@ Given /^the xml does not match xpath "([^"]*)"$/
 ```
 DennisDigital\Behat\Mink\Context\HttpContext
 ```
-
+### Step Definitions
 ```gherkin
 Given /^I set the "([^"]*)" header to "([^"]*)"$/
 Given I set the cookie :arg1 with :arg2
