@@ -517,7 +517,7 @@ class HtmlContext extends RawMinkContext {
       foreach ($results as $element) {
         $text = $element->getText();
         $json = new Dot(json_decode($text, TRUE));
-        $value = $json->get($jsonKey);
+        $value = $json->get($this->getJsonKey($jsonKey));
         if (preg_match($regex, $value)) {
           return;
         }
@@ -542,7 +542,7 @@ class HtmlContext extends RawMinkContext {
 
         // Get value and check regex.
         $json = new Dot(json_decode($json_element_text, TRUE));
-        $value = $json->get($jsonKey);
+        $value = $json->get($this->getJsonKey($jsonKey));
 
         if (preg_match($regex, $value)) {
           return;
@@ -571,7 +571,7 @@ class HtmlContext extends RawMinkContext {
 
         // Get value and check regex.
         $json = new Dot(json_decode($json_element_text, TRUE));
-        $value = $json->get($jsonKey);
+        $value = $json->get($this->getJsonKey($jsonKey));
 
         if (preg_match($regex, $value)) {
           return;
@@ -583,6 +583,16 @@ class HtmlContext extends RawMinkContext {
     throw new \Exception(sprintf('The regex "%s" was not found in the %s element "%s".', $regex, $element, $jsonKey));
   }
 
+  /**
+   * Format JSON key.
+   *
+   * @param $json_key
+   * @return string
+   */
+  protected function getJsonKey($json_key) {
+    // Convert prop[0] to prop.0
+    return str_replace(['[', ']'], ['.', ''], $json_key);
+  }
 
   /**
    * Store, the result of the regex on the element with specified CSS.
