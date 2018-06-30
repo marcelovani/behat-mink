@@ -51,7 +51,12 @@ Then I should see the following picture mappings for the :arg1 element
 ```
 DennisDigital\Behat\Mink\Context\JsContext:
   parameters:
-    element_wait_timeout: {optional, default:5}
+    element_wait_timeout: (optional) {default:5}
+    breakpoints: (optional)
+      mobile: {default:380}
+      desktop: {default:1090}
+      narrow: {default:870}
+      wide: {default:1205}
 ```
 ### Step Definitions
 ```gherkin
@@ -79,6 +84,8 @@ Then /^"([^"]*)" should be revealed$/
 Then /^"([^"]*)" should be unrevealed$/
 Then /^each "([^"]*)" should have been given the "([^"]*)" class$/
 Then /^each "([^"]*)" should not have the "([^"]*)" class$/
+Then /^I am in breakpoint "([^"]*)"$/
+Then /^I am in breakpoint "([^"]*)" with height "([^"]*)"$/
 ```
 
 ## JSON

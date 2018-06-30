@@ -19,6 +19,18 @@ class JsContext extends RawMinkContext {
   protected $element_wait_timeout = 5;
 
   /**
+   * Default breakpoints.
+   *
+   * @var array
+   */
+  protected $breakpoints = array(
+    'mobile' => 380,
+    'desktop' => 1090,
+    'narrow' => 870,
+    'wide' => 1205,
+  );
+
+  /**
    * Initializes context.
    *
    * Every scenario gets its own context object.
@@ -27,8 +39,13 @@ class JsContext extends RawMinkContext {
    *   Context parameters (set them up through behat.yml or behat.local.yml).
    */
   public function __construct($parameters = array()) {
+    // Allow behat.yml to override default timeout.
     if (isset($parameters['element_wait_timeout'])) {
       $this->element_wait_timeout = $parameters['element_wait_timeout'];
+    }
+    // Allow behat.yml to override default breakpoints sizes.
+    if (isset($parameters['breakpoints'])) {
+      $this->breakpoints = array_merge($this->breakpoints, $parameters['breakpoints']);
     }
   }
 
@@ -548,4 +565,26 @@ JS;
     $this->getSession()->wait($timeout, "typeof jQuery != 'undefined' && jQuery.isReady");
   }
 
+  /**
+   * @Then /^I am in breakpoint "([^"]*)"$/
+   *
+   * Requires @javascript tag on the scenario.
+   */
+  public function jsSetScreenToBreakpoint($breakpoint, $height = 10000) {
+    if (!isset($this->breakpoints[$breakpoint])) {
+      // No such break point defined.
+      throw new \Exception(sprintf("Breakpoint '%s' is not defined", $breakpoint));
+    }
+    $width = (int) $this->breakpoints[$breakpoint];
+
+    // Need to set a height too, so make it tall.
+    $this->getSession()->resizeWindow($width, $height, 'current');
+  }
+
+  /**
+   * @Given /^I am in breakpoint "([^"]*)" with height "([^"]*)"$/
+   */
+  public function iAmInBreakpointWithHeight($breakpoint, $height) {
+    $this->jsSetScreenToBreakpoint($breakpoint, $height);
+  }
 }
