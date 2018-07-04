@@ -3,6 +3,7 @@
 namespace DennisDigital\Behat\Mink\Context;
 
 use Behat\MinkExtension\Context\RawMinkContext;
+use Behat\Gherkin\Node\TableNode;
 use Adbar\Dot as Dot;
 
 /**
