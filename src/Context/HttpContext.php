@@ -49,7 +49,7 @@ class HttpContext extends RawMinkContext {
    * @Given I set the cookie :arg1 with :arg2
    */
   public function iSetTheCookieWith($cookie, $value) {
-    $session = $this->MinkContext->getSession();
+    $session = $this->getSession();
     $driver = $session->getDriver();
     if ($driver instanceof Selenium2Driver) {
       $session->evaluateScript("(function(){
