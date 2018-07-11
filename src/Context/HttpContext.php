@@ -4,6 +4,7 @@ namespace DennisDigital\Behat\Mink\Context;
 
 use Behat\MinkExtension\Context\RawMinkContext;
 use Behat\Mink\Driver\Selenium2Driver;
+use Behat\Mink\Driver\GoutteDriver;
 
 /**
  * Class HttpContext
