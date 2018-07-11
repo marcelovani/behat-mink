@@ -94,6 +94,9 @@ class JsonContext extends RawMinkContext {
     // Convert prop[0] to prop.0
     $json_key = str_replace(['[', ']'], ['.', ''], $json_key);
 
+    // Remove leading/trailing dots.
+    $json_key = trim($json_key, '.');
+
     $json = new Dot($json_array);
     if (!$json->has($json_key)) {
       throw new \Exception($json_key . " could not be found in response JSON.");
