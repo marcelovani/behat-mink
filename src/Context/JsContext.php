@@ -291,7 +291,7 @@ class JsContext extends RawMinkContext {
    * Requires @javascript tag on the scenario.
    */
   public function jsSetScreenSize($width, $height) {
-    $this->getSession()->resizeWindow($width, $height, 'current');
+    $this->getSession()->resizeWindow((int) $width, (int) $height, 'current');
   }
 
 
@@ -585,6 +585,6 @@ JS;
    * @Given /^I am in breakpoint "([^"]*)" with height "([^"]*)"$/
    */
   public function iAmInBreakpointWithHeight($breakpoint, $height) {
-    $this->jsSetScreenToBreakpoint($breakpoint, $height);
+    $this->jsSetScreenToBreakpoint($breakpoint, (int) $height);
   }
 }
