@@ -102,6 +102,7 @@ Then /^I click the "([^"]*)" element$/
 Then I scroll to the bottom of the page
 Given I press the :key key
 Given /^I switch to iframe "([^"]*)"$/
+Then /^the "([^"]*)" element should not be clickable$/
 ```
 
 ##### Checking visibility

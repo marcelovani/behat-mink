@@ -595,4 +595,19 @@ JS;
     $this->getSession()->switchToIFrame($name);
   }
 
+  /**
+   * @Then /^the "([^"]*)" element should not be clickable$/
+   */
+  public function elementNotClickable($selector) {
+    $xpath = $this->cssSelectorToXpath($selector);
+    try {
+      $this->getSession()->getDriver()->click($xpath);
+    }
+    catch (\Exception $e) {
+      if (preg_match('/Element .*? is not clickable/', $e->getMessage())) {
+        return TRUE;
+      }
+      throw $e;
+    }
+  }
 }
