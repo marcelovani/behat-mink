@@ -587,4 +587,12 @@ JS;
   public function iAmInBreakpointWithHeight($breakpoint, $height) {
     $this->jsSetScreenToBreakpoint($breakpoint, (int) $height);
   }
+
+  /**
+   * @Given /^I switch to iframe "([^"]*)"$/
+   */
+  public function iSwitchToIFrame($name) {
+    $this->getSession()->switchToIFrame($name);
+  }
+
 }
