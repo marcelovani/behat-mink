@@ -101,6 +101,7 @@ Then /^I wait for "([^"]*)" milliseconds$/
 Then /^I click the "([^"]*)" element$/
 Then I scroll to the bottom of the page
 Given I press the :key key
+Given /^I switch to iframe "([^"]*)"$/
 ```
 
 ##### Checking visibility
