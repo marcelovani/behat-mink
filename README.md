@@ -23,6 +23,7 @@ Then /^the "([^"]*)" element should be after the "([^"]*)" element$/
 Then /^the "([^"]*)" element should contain match result "([^"]*)"$/
 Then /^an? "(?P<element>[^"]*)" element should match "(?P<regex>(?:[^"]|\\")*)"$/
 Then /^an? "(?P<element>[^"]*)" element should not match "(?P<regex>(?:[^"]|\\")*)"$/
+Then /^I should see "([^"]*)" in any "([^"]*)" element$/
 ```
 
 ##### Matching specific attributes

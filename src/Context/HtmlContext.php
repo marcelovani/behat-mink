@@ -334,6 +334,25 @@ class HtmlContext extends RawMinkContext {
   }
 
   /**
+   * @Then I should see :arg1 in any :arg2 element
+   */
+  public function iShouldSeeInAnyElement($value, $element)
+  {
+    $found = FALSE;
+    $page = $this->getSession()->getPage();
+    if (!$results = $page->findAll('css', $element)) {
+      throw new \Exception(sprintf('The element "%s" was not found.', $element));
+    }
+    foreach ($results as $item) {
+      $html = $item->getHtml();
+      if (stripos($html, $value) !== FALSE) {
+        return;
+      }
+    }
+    throw new \Exception(sprintf('The HTML does not contain "%s"', $value));
+  }
+
+  /**
    * @Then /^the "([^"]*)" element should be after the "([^"]*)" element$/
    */
   public function theElementShouldBeAfterTheElement($element1, $element2) {
